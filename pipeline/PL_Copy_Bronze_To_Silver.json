@@ -1,0 +1,93 @@
+{
+	"name": "PL_Copy_Bronze_To_Silver",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy_rhu",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [
+					{
+						"name": "Source",
+						"value": "bronze//dummy_customers.csv"
+					},
+					{
+						"name": "Destination",
+						"value": "silver//dummy_customers.csv"
+					}
+				],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobStorageReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings",
+							"skipLineCount": 0
+						}
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobStorageWriteSettings",
+							"copyBehavior": "PreserveHierarchy"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".txt"
+						}
+					},
+					"enableStaging": false,
+					"validateDataConsistency": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_DelimitedText_Parameterized",
+						"type": "DatasetReference",
+						"parameters": {
+							"ContainerName": "bronze",
+							"DirectoryName": {
+								"value": "@string('')",
+								"type": "Expression"
+							},
+							"FileName": "Customers.csv"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_DelimitedText_Parameterized",
+						"type": "DatasetReference",
+						"parameters": {
+							"ContainerName": "silver",
+							"DirectoryName": "customers",
+							"FileName": "customers_copy.csv"
+						}
+					}
+				]
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2026-09-19T07:57:05Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

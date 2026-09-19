@@ -1,0 +1,12 @@
+{
+	"name": "LS_KeyVault_ADF",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"description": "Stores and retrieves ADF credentials securely from Azure Key Vault",
+		"annotations": [],
+		"type": "AzureKeyVault",
+		"typeProperties": {
+			"baseUrl": "https://kv-adf91326-lab01.vault.azure.net/"
+		}
+	}
+}

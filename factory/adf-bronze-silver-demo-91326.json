@@ -1,0 +1,15 @@
+{
+	"name": "adf-bronze-silver-demo-91326",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true
+		}
+	},
+	"location": "centralindia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "c07a0085-e4b5-4340-8630-5a6b43580475",
+		"tenantId": "7d545c4a-0fc6-4617-8557-355e20a35dc5"
+	}
+}

@@ -1,0 +1,56 @@
+{
+	"name": "DF_FilterSort_Active_Customers",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_Bronze_Customers",
+						"type": "DatasetReference"
+					},
+					"name": "srcCustomers"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_Silver_ActiveCustomers",
+						"type": "DatasetReference"
+					},
+					"name": "snkSilverCustomers"
+				}
+			],
+			"transformations": [
+				{
+					"name": "fltActiveCustomers"
+				},
+				{
+					"name": "srtCustomersByFirstName"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          CustomerID as string,",
+				"          FirstName as string,",
+				"          LastName as string,",
+				"          Email as string,",
+				"          PhoneNumber as string,",
+				"          JoinDate as string,",
+				"          Status as string,",
+				"          Region as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> srcCustomers",
+				"srcCustomers filter(Status == 'Active') ~> fltActiveCustomers",
+				"fltActiveCustomers sort(asc(FirstName, true)) ~> srtCustomersByFirstName",
+				"srtCustomersByFirstName sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> snkSilverCustomers"
+			]
+		}
+	}
+}
