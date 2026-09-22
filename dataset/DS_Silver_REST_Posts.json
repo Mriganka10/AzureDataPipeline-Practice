@@ -1,0 +1,27 @@
+{
+	"name": "DS_Silver_REST_Posts",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_Blob_Parameterized",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"StorageAccountName": "stbronzesilver91326"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "posts.csv",
+				"folderPath": "restapi",
+				"container": "silver"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}
