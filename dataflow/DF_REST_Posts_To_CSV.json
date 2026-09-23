@@ -1,0 +1,71 @@
+{
+	"name": "DF_REST_Posts_To_CSV",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_REST_Posts",
+						"type": "DatasetReference"
+					},
+					"name": "srcRestPosts"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_Silver_REST_Posts",
+						"type": "DatasetReference"
+					},
+					"name": "snkSilverRestPosts"
+				}
+			],
+			"transformations": [
+				{
+					"name": "selPostsColumns"
+				},
+				{
+					"name": "drvPostsColumns"
+				},
+				{
+					"name": "selFinalPosts"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          body as (body as string, id as short, title as string, userId as short),",
+				"          headers as [string,string]",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     httpMethod: 'GET',",
+				"     timeout: 30,",
+				"     requestInterval: 0,",
+				"     paginationRules: ['supportRFC5988' -> 'true'],",
+				"     responseFormat: ['type' -> 'json', 'documentForm' -> 'documentPerLine']) ~> srcRestPosts",
+				"srcRestPosts select(mapColumn(",
+				"          body",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selPostsColumns",
+				"selPostsColumns derive(userId = body.userId,",
+				"          id = body.id,",
+				"          title = body.title,",
+				"          body_text = body.body) ~> drvPostsColumns",
+				"drvPostsColumns select(mapColumn(",
+				"          userId,",
+				"          id,",
+				"          title,",
+				"          body_text",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selFinalPosts",
+				"selFinalPosts sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> snkSilverRestPosts"
+			]
+		}
+	}
+}
