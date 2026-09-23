@@ -20,6 +20,10 @@
 			"type": "string",
 			"defaultValue": "https://kv-adf91326-lab01.vault.azure.net/"
 		},
+		"LS_REST_JSONPlaceholder_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://jsonplaceholder.typicode.com"
+		},
 		"containerUri": {
 			"type": "string",
 			"metadata": "URI to storage account containing linked ARM templates"
@@ -55,6 +59,9 @@
 					},
 					"LS_KeyVault_ADF_properties_typeProperties_baseUrl": {
 						"value": "[parameters('LS_KeyVault_ADF_properties_typeProperties_baseUrl')]"
+					},
+					"LS_REST_JSONPlaceholder_properties_typeProperties_url": {
+						"value": "[parameters('LS_REST_JSONPlaceholder_properties_typeProperties_url')]"
 					}
 				}
 			},

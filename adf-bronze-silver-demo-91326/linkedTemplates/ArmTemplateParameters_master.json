@@ -14,6 +14,9 @@
 		"LS_KeyVault_ADF_properties_typeProperties_baseUrl": {
 			"value": "https://kv-adf91326-lab01.vault.azure.net/"
 		},
+		"LS_REST_JSONPlaceholder_properties_typeProperties_url": {
+			"value": "https://jsonplaceholder.typicode.com"
+		},
 		"containerUri": {
 			"value": ""
 		},

@@ -19,6 +19,10 @@
 		"LS_KeyVault_ADF_properties_typeProperties_baseUrl": {
 			"type": "string",
 			"defaultValue": "https://kv-adf91326-lab01.vault.azure.net/"
+		},
+		"LS_REST_JSONPlaceholder_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://jsonplaceholder.typicode.com"
 		}
 	},
 	"variables": {
@@ -48,6 +52,21 @@
 				"type": "AzureKeyVault",
 				"typeProperties": {
 					"baseUrl": "[parameters('LS_KeyVault_ADF_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_REST_JSONPlaceholder')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "RestService",
+				"typeProperties": {
+					"url": "[parameters('LS_REST_JSONPlaceholder_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": true,
+					"authenticationType": "Anonymous"
 				}
 			},
 			"dependsOn": []
@@ -245,6 +264,26 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/DS_REST_Posts')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_REST_JSONPlaceholder",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "RestResource",
+				"typeProperties": {
+					"relativeUrl": "posts"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_REST_JSONPlaceholder')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DS_DelimitedText_Parameterized')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -359,6 +398,38 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_Bronze_Customers')]",
 				"[concat(variables('factoryId'), '/datasets/DS_Silver_ActiveCustomers')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_Silver_REST_Posts')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_Blob_Parameterized",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"StorageAccountName": "stbronzesilver91326"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "posts.csv",
+						"folderPath": "restapi",
+						"container": "silver"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_Blob_Parameterized')]"
 			]
 		},
 		{
@@ -506,6 +577,129 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/DF_FilterSort_Active_Customers')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_REST_Posts_To_CSV')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_REST_Posts",
+								"type": "DatasetReference"
+							},
+							"name": "srcRestPosts"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DS_Silver_REST_Posts",
+								"type": "DatasetReference"
+							},
+							"name": "snkSilverRestPosts"
+						}
+					],
+					"transformations": [
+						{
+							"name": "selPostsColumns"
+						},
+						{
+							"name": "drvPostsColumns"
+						},
+						{
+							"name": "selFinalPosts"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          body as (body as string, id as short, title as string, userId as short),",
+						"          headers as [string,string]",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     httpMethod: 'GET',",
+						"     timeout: 30,",
+						"     requestInterval: 0,",
+						"     paginationRules: ['supportRFC5988' -> 'true'],",
+						"     responseFormat: ['type' -> 'json', 'documentForm' -> 'documentPerLine']) ~> srcRestPosts",
+						"srcRestPosts select(mapColumn(",
+						"          body",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selPostsColumns",
+						"selPostsColumns derive(userId = body.userId,",
+						"          id = body.id,",
+						"          title = body.title,",
+						"          body_text = body.body) ~> drvPostsColumns",
+						"drvPostsColumns select(mapColumn(",
+						"          userId,",
+						"          id,",
+						"          title,",
+						"          body_text",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selFinalPosts",
+						"selFinalPosts sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> snkSilverRestPosts"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_REST_Posts')]",
+				"[concat(variables('factoryId'), '/datasets/DS_Silver_REST_Posts')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_REST_Posts_To_CSV')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Run_REST_Posts_To_CSV",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_REST_Posts_To_CSV",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"srcRestPosts": {},
+									"snkSilverRestPosts": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/DF_REST_Posts_To_CSV')]"
 			]
 		}
 	]
