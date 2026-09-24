@@ -1,0 +1,35 @@
+{
+	"name": "DS_SQL_DummyCustomers",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_AzureSQL_SQLPracticeDB",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "customer_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "customer_name",
+				"type": "varchar"
+			},
+			{
+				"name": "city",
+				"type": "varchar"
+			},
+			{
+				"name": "amount",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "DummyCustomers"
+		}
+	}
+}
