@@ -1,0 +1,14 @@
+{
+	"name": "LS_AzureSQL_SQLPracticeDB",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"server": "mriganka-sql-learning-2026.database.windows.net",
+			"database": "SQLPracticeDB",
+			"encrypt": "mandatory",
+			"trustServerCertificate": false,
+			"authenticationType": "SystemAssignedManagedIdentity"
+		}
+	}
+}
