@@ -16,6 +16,12 @@
 		},
 		"LS_REST_JSONPlaceholder_properties_typeProperties_url": {
 			"value": "https://jsonplaceholder.typicode.com"
+		},
+		"LS_AzureSQL_SQLPracticeDB_properties_typeProperties_server": {
+			"value": "mriganka-sql-learning-2026.database.windows.net"
+		},
+		"LS_AzureSQL_SQLPracticeDB_properties_typeProperties_database": {
+			"value": "SQLPracticeDB"
 		}
 	}
 }
