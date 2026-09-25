@@ -24,6 +24,7 @@
 					],
 					"storeSettings": {
 						"type": "AzureBlobStorageReadSettings",
+						"recursive": true,
 						"enablePartitionDiscovery": false
 					},
 					"formatSettings": {
@@ -183,7 +184,10 @@
 										"userProperties": [],
 										"typeProperties": {
 											"variableName": "ProcessedFiles",
-											"value": "@item().name"
+											"value": {
+												"value": "@item().name",
+												"type": "Expression"
+											}
 										}
 									}
 								]
@@ -191,11 +195,35 @@
 						}
 					]
 				}
+			},
+			{
+				"name": "Set_Processed_Files_Text",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "ForEach_Bronze_File",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "ProcessedFilesText",
+					"value": "@join(variables('ProcessedFiles'), ',')"
+				}
 			}
 		],
 		"variables": {
 			"ProcessedFiles": {
 				"type": "Array"
+			},
+			"ProcessedFilesText": {
+				"type": "String"
 			}
 		},
 		"annotations": []
