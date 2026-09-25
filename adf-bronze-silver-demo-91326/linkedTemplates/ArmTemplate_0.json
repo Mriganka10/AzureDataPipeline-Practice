@@ -97,6 +97,59 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/DS_Bronze_CSV_Parameterized')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"FileName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@dataset().FileName",
+							"type": "Expression"
+						},
+						"container": "bronze"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "customer_id",
+						"type": "String"
+					},
+					{
+						"name": "customer_name",
+						"type": "String"
+					},
+					{
+						"name": "city",
+						"type": "String"
+					},
+					{
+						"name": "amount",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_AzureBlobStorage')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DS_Bronze_Customers')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -197,6 +250,28 @@
 						"type": "String"
 					}
 				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_Bronze_Folder_Binary')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"container": "bronze"
+					}
+				}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/LS_AzureBlobStorage')]"
@@ -394,81 +469,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/DS_Bronze_Folder_Binary')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "LS_AzureBlobStorage",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "Binary",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobStorageLocation",
-						"container": "bronze"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/LS_AzureBlobStorage')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DS_Bronze_CSV_Parameterized')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "LS_AzureBlobStorage",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"FileName": {
-						"type": "string"
-					}
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobStorageLocation",
-						"fileName": {
-							"value": "@dataset().FileName",
-							"type": "Expression"
-						},
-						"container": "bronze"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": [
-					{
-						"name": "customer_id",
-						"type": "String"
-					},
-					{
-						"name": "customer_name",
-						"type": "String"
-					},
-					{
-						"name": "city",
-						"type": "String"
-					},
-					{
-						"name": "amount",
-						"type": "String"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/LS_AzureBlobStorage')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/PL_Copy_DummyCustomers_To_SQL')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -586,6 +586,225 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_Bronze_DummyCustomers')]",
+				"[concat(variables('factoryId'), '/datasets/DS_SQL_DummyCustomers')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_Process_Bronze_Files_Dynamic')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get_Bronze_File_List",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "DS_Bronze_Folder_Binary",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "BinaryReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ForEach_Bronze_File",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get_Bronze_File_List",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get_Bronze_File_List').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "If_File_Is_CSV",
+									"type": "IfCondition",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@equals(item().name, 'dummy_customers.csv')",
+											"type": "Expression"
+										},
+										"ifTrueActivities": [
+											{
+												"name": "Copy_Current_CSV_To_SQL",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "DelimitedTextSource",
+														"storeSettings": {
+															"type": "AzureBlobStorageReadSettings",
+															"recursive": true,
+															"enablePartitionDiscovery": false
+														},
+														"formatSettings": {
+															"type": "DelimitedTextReadSettings"
+														}
+													},
+													"sink": {
+														"type": "AzureSqlSink",
+														"writeBehavior": "insert",
+														"sqlWriterUseTableLock": false
+													},
+													"enableStaging": false,
+													"translator": {
+														"type": "TabularTranslator",
+														"mappings": [
+															{
+																"source": {
+																	"name": "customer_id",
+																	"type": "String",
+																	"physicalType": "String"
+																},
+																"sink": {
+																	"name": "customer_id",
+																	"type": "Int32",
+																	"physicalType": "int"
+																}
+															},
+															{
+																"source": {
+																	"name": "customer_name",
+																	"type": "String",
+																	"physicalType": "String"
+																},
+																"sink": {
+																	"name": "customer_name",
+																	"type": "String",
+																	"physicalType": "varchar"
+																}
+															},
+															{
+																"source": {
+																	"name": "city",
+																	"type": "String",
+																	"physicalType": "String"
+																},
+																"sink": {
+																	"name": "city",
+																	"type": "String",
+																	"physicalType": "varchar"
+																}
+															},
+															{
+																"source": {
+																	"name": "amount",
+																	"type": "String",
+																	"physicalType": "String"
+																},
+																"sink": {
+																	"name": "amount",
+																	"type": "Int32",
+																	"physicalType": "int"
+																}
+															}
+														],
+														"typeConversion": true,
+														"typeConversionSettings": {
+															"allowDataTruncation": true,
+															"treatBooleanAsNumber": false
+														}
+													}
+												},
+												"inputs": [
+													{
+														"referenceName": "DS_Bronze_CSV_Parameterized",
+														"type": "DatasetReference",
+														"parameters": {
+															"FileName": {
+																"value": "@item().name",
+																"type": "Expression"
+															}
+														}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "DS_SQL_DummyCustomers",
+														"type": "DatasetReference",
+														"parameters": {}
+													}
+												]
+											},
+											{
+												"name": "Append_Processed_File_Name",
+												"type": "AppendVariable",
+												"dependsOn": [
+													{
+														"activity": "Copy_Current_CSV_To_SQL",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"userProperties": [],
+												"typeProperties": {
+													"variableName": "ProcessedFiles",
+													"value": {
+														"value": "@item().name",
+														"type": "Expression"
+													}
+												}
+											}
+										]
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"ProcessedFiles": {
+						"type": "Array"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_Bronze_Folder_Binary')]",
+				"[concat(variables('factoryId'), '/datasets/DS_Bronze_CSV_Parameterized')]",
 				"[concat(variables('factoryId'), '/datasets/DS_SQL_DummyCustomers')]"
 			]
 		},
@@ -736,199 +955,6 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_Bronze_Customers')]",
 				"[concat(variables('factoryId'), '/datasets/DS_Silver_ActiveCustomers')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_Process_Bronze_Files_Dynamic')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Get_Bronze_File_List",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "DS_Bronze_Folder_Binary",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "AzureBlobStorageReadSettings",
-								"enablePartitionDiscovery": false
-							},
-							"formatSettings": {
-								"type": "BinaryReadSettings"
-							}
-						}
-					},
-					{
-						"name": "ForEach_Bronze_File",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "Get_Bronze_File_List",
-								"dependencyConditions": [
-									"Completed"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('Get_Bronze_File_List').output.childItems",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "If_File_Is_CSV",
-									"type": "IfCondition",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"expression": {
-											"value": "@equals(item().name, 'dummy_customers.csv')",
-											"type": "Expression"
-										},
-										"ifTrueActivities": [
-											{
-												"name": "Copy_Current_CSV_To_SQL",
-												"type": "Copy",
-												"dependsOn": [],
-												"policy": {
-													"timeout": "0.12:00:00",
-													"retry": 0,
-													"retryIntervalInSeconds": 30,
-													"secureOutput": false,
-													"secureInput": false
-												},
-												"userProperties": [],
-												"typeProperties": {
-													"source": {
-														"type": "DelimitedTextSource",
-														"storeSettings": {
-															"type": "AzureBlobStorageReadSettings",
-															"recursive": true,
-															"enablePartitionDiscovery": false
-														},
-														"formatSettings": {
-															"type": "DelimitedTextReadSettings"
-														}
-													},
-													"sink": {
-														"type": "AzureSqlSink",
-														"writeBehavior": "insert",
-														"sqlWriterUseTableLock": false
-													},
-													"enableStaging": false,
-													"translator": {
-														"type": "TabularTranslator",
-														"mappings": [
-															{
-																"source": {
-																	"name": "customer_id",
-																	"type": "String",
-																	"physicalType": "String"
-																},
-																"sink": {
-																	"name": "customer_id",
-																	"type": "Int32",
-																	"physicalType": "int"
-																}
-															},
-															{
-																"source": {
-																	"name": "customer_name",
-																	"type": "String",
-																	"physicalType": "String"
-																},
-																"sink": {
-																	"name": "customer_name",
-																	"type": "String",
-																	"physicalType": "varchar"
-																}
-															},
-															{
-																"source": {
-																	"name": "city",
-																	"type": "String",
-																	"physicalType": "String"
-																},
-																"sink": {
-																	"name": "city",
-																	"type": "String",
-																	"physicalType": "varchar"
-																}
-															},
-															{
-																"source": {
-																	"name": "amount",
-																	"type": "String",
-																	"physicalType": "String"
-																},
-																"sink": {
-																	"name": "amount",
-																	"type": "Int32",
-																	"physicalType": "int"
-																}
-															}
-														],
-														"typeConversion": true,
-														"typeConversionSettings": {
-															"allowDataTruncation": true,
-															"treatBooleanAsNumber": false
-														}
-													}
-												},
-												"inputs": [
-													{
-														"referenceName": "DS_Bronze_CSV_Parameterized",
-														"type": "DatasetReference",
-														"parameters": {
-															"FileName": {
-																"value": "@item().name",
-																"type": "Expression"
-															}
-														}
-													}
-												],
-												"outputs": [
-													{
-														"referenceName": "DS_SQL_DummyCustomers",
-														"type": "DatasetReference",
-														"parameters": {}
-													}
-												]
-											}
-										]
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/DS_Bronze_Folder_Binary')]",
-				"[concat(variables('factoryId'), '/datasets/DS_Bronze_CSV_Parameterized')]",
-				"[concat(variables('factoryId'), '/datasets/DS_SQL_DummyCustomers')]"
 			]
 		},
 		{
