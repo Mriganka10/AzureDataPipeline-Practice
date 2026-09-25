@@ -168,6 +168,23 @@
 												"type": "DatasetReference"
 											}
 										]
+									},
+									{
+										"name": "Append_Processed_File_Name",
+										"type": "AppendVariable",
+										"dependsOn": [
+											{
+												"activity": "Copy_Current_CSV_To_SQL",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "ProcessedFiles",
+											"value": "@item().name"
+										}
 									}
 								]
 							}
@@ -176,6 +193,11 @@
 				}
 			}
 		],
+		"variables": {
+			"ProcessedFiles": {
+				"type": "Array"
+			}
+		},
 		"annotations": []
 	}
 }
