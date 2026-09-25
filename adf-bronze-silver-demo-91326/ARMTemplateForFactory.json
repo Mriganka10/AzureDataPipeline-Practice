@@ -459,6 +459,27 @@
 								}
 							]
 						}
+					},
+					{
+						"name": "Set_Processed_Files_Text",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "ForEach_Bronze_File",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "ProcessedFilesText",
+							"value": "@join(variables('ProcessedFiles'), ',')"
+						}
 					}
 				],
 				"policy": {
@@ -467,6 +488,9 @@
 				"variables": {
 					"ProcessedFiles": {
 						"type": "Array"
+					},
+					"ProcessedFilesText": {
+						"type": "String"
 					}
 				},
 				"annotations": []
@@ -1225,6 +1249,84 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_REST_Posts')]",
 				"[concat(variables('factoryId'), '/datasets/DS_Silver_REST_Posts')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_Lookup_SQL_DummyCustomers')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Lookup_SQL_Row_Count",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": "SELECT COUNT(*) AS TotalRows\nFROM dbo.DummyCustomers;",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQL_DummyCustomers",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_SQL_DummyCustomers')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_Truncate_DummyCustomers')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "SP_Truncate_DummyCustomers",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[usp_TruncateDummyCustomers]"
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_AzureSQL_SQLPracticeDB",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_AzureSQL_SQLPracticeDB')]"
 			]
 		}
 	]
