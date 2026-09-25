@@ -224,6 +224,12 @@
 			},
 			"ProcessedFilesText": {
 				"type": "String"
+			},
+			"SkippedFiles": {
+				"type": "Array"
+			},
+			"SkippedFilesText": {
+				"type": "String"
 			}
 		},
 		"annotations": []
