@@ -1,0 +1,28 @@
+{
+	"name": "PL_Truncate_DummyCustomers",
+	"properties": {
+		"activities": [
+			{
+				"name": "SP_Truncate_DummyCustomers",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[usp_TruncateDummyCustomers]"
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_AzureSQL_SQLPracticeDB",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"annotations": []
+	}
+}
