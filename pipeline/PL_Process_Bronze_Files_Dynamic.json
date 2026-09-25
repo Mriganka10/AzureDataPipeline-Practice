@@ -61,6 +61,18 @@
 									"value": "@equals(item().name, 'dummy_customers.csv')",
 									"type": "Expression"
 								},
+								"ifFalseActivities": [
+									{
+										"name": "Append_Skipped_File_Name",
+										"type": "AppendVariable",
+										"dependsOn": [],
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "SkippedFiles",
+											"value": "@item().name"
+										}
+									}
+								],
 								"ifTrueActivities": [
 									{
 										"name": "Copy_Current_CSV_To_SQL",
@@ -215,6 +227,27 @@
 				"typeProperties": {
 					"variableName": "ProcessedFilesText",
 					"value": "@join(variables('ProcessedFiles'), ',')"
+				}
+			},
+			{
+				"name": "Set_Skipped_Files_Text",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Set_Processed_Files_Text",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "SkippedFilesText",
+					"value": "@join(variables('SkippedFiles'), ',')"
 				}
 			}
 		],
